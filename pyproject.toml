@@ -5,7 +5,9 @@ readme = "README.md"
 requires-python = ">=3.13"
 version = "0.1.0"
 dependencies = [
+    "huggingface-hub>=1.21.0",
     "numpy>=2.5.0",
+    "pyarrow>=24.0.0",
 ]
 
 [build-system]
@@ -68,6 +70,8 @@ ignore = [
     "D212",  # incompatible with D213, summary goes on the line below the quotes
     "D104",  # package __init__ re-export shim needs no docstring
     "ANN401",  # allow explicit Any in annotations
+    "N803",  # X is the conventional name for a feature matrix argument
+    "N806",  # X is the conventional name for a feature matrix variable
 ]
 
 [tool.ruff.lint.per-file-ignores]
