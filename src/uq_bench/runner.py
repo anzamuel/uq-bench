@@ -1,12 +1,14 @@
 """
 Benchmark runner.
 
-Runs a method on a dataset by handing it a split over an npz file and scoring the intervals it returns. The method runs in its own environment via `uv run`, so the bench shares no dependencies with it.
+Runs a method on a dataset by handing it a split over an npz file and scoring the intervals it returns, with the method in its own `uv` environment so the bench shares no dependencies. `run_grid` sweeps that across the method, dataset, seed, and coverage axes.
 """
 
 import shutil
 import subprocess
 import tempfile
+from dataclasses import dataclass
+from itertools import product
 from pathlib import Path
 
 import numpy as np
@@ -14,7 +16,18 @@ import numpy as np
 from uq_bench import metrics
 from uq_bench.datasets import Dataset, partition
 
-__all__ = ["run"]
+__all__ = ["Result", "run", "run_grid"]
+
+
+@dataclass(frozen=True)
+class Result:
+    """One grid cell: a method on a dataset at a given seed and coverage."""
+
+    method: str
+    dataset: str
+    seed: int
+    coverage: float
+    metrics: dict[str, float]
 
 
 def run(dataset: Dataset, method: Path, seed: int, coverage: float) -> dict[str, float]:
@@ -40,3 +53,17 @@ def run(dataset: Dataset, method: Path, seed: int, coverage: float) -> dict[str,
         return metrics.evaluate(
             split.test[1], preds["lower"], preds["upper"], alpha=1.0 - coverage
         )
+
+
+def run_grid(
+    methods: list[Path],
+    datasets: list[Dataset],
+    seeds: list[int],
+    coverages: list[float],
+) -> list[Result]:
+    """Run every method on every dataset across the seeds and coverages."""
+    results: list[Result] = []
+    for method, dataset, seed, coverage in product(methods, datasets, seeds, coverages):
+        scores = run(dataset, method, seed, coverage)
+        results.append(Result(method.stem, dataset.name, seed, coverage, scores))
+    return results
