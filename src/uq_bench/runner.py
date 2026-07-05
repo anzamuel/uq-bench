@@ -7,7 +7,6 @@ Runs a method on a dataset by handing it a split over an npz file and scoring th
 import shutil
 import subprocess
 import tempfile
-from dataclasses import dataclass
 from itertools import product
 from pathlib import Path
 
@@ -15,19 +14,9 @@ import numpy as np
 
 from uq_bench import metrics
 from uq_bench.datasets import Dataset, partition
+from uq_bench.results import Result
 
-__all__ = ["Result", "run", "run_grid"]
-
-
-@dataclass(frozen=True)
-class Result:
-    """One grid cell: a method on a dataset at a given seed and coverage."""
-
-    method: str
-    dataset: str
-    seed: int
-    coverage: float
-    metrics: dict[str, float]
+__all__ = ["run", "run_grid"]
 
 
 def run(dataset: Dataset, method: Path, seed: int, coverage: float) -> dict[str, float]:
