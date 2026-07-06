@@ -1,9 +1,10 @@
 """
 Benchmark runner.
 
-Runs a method on a dataset by handing it a train and test split over an npz file, along with the seed so the method's own calibration split is reproducible, and scoring the intervals it returns; the method runs in its own `uv` environment so the bench shares no dependencies. `run_grid` sweeps that across the method, dataset, seed, and coverage axes.
+Runs a method on a dataset by handing it a train and test split over an npz file, along with the seed so the method's own calibration split is reproducible, and scoring the intervals it returns; the method runs as its own `uv` project so the bench shares no dependencies. `run_grid` sweeps that across the method, dataset, seed, and coverage axes.
 """
 
+import os
 import shutil
 import subprocess
 import tempfile
@@ -37,13 +38,17 @@ def run(dataset: Dataset, method: Path, seed: int, coverage: float) -> dict[str,
         cmd = [
             uv,
             "run",
+            "--directory",
             str(method),
+            "main.py",
             str(split_path),
             str(preds_path),
             str(coverage),
             str(seed),
         ]
-        subprocess.run(cmd, check=True)  # noqa: S603
+        env = os.environ.copy()
+        env.pop("VIRTUAL_ENV", None)  # let uv use the method's own project env
+        subprocess.run(cmd, check=True, env=env)  # noqa: S603
         preds = np.load(preds_path)
         return metrics.evaluate(
             split.test[1], preds["lower"], preds["upper"], alpha=1.0 - coverage
@@ -60,5 +65,5 @@ def run_grid(
     results: list[Result] = []
     for method, dataset, seed, coverage in product(methods, datasets, seeds, coverages):
         scores = run(dataset, method, seed, coverage)
-        results.append(Result(method.stem, dataset.name, seed, coverage, scores))
+        results.append(Result(method.name, dataset.name, seed, coverage, scores))
     return results
