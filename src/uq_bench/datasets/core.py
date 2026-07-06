@@ -1,7 +1,7 @@
 """
 Datasets and their splits.
 
-A Dataset is a named feature matrix and target vector. A Split is one dataset's train, cal, and test parts.
+A Dataset is a named feature matrix and target vector. A Split is one dataset's train and test parts; a method sub-splits the train part for its own calibration.
 """
 
 from dataclasses import dataclass
@@ -29,26 +29,23 @@ class Dataset:
 
 @dataclass(frozen=True)
 class Split:
-    """A train, cal, and test split of a dataset, each part a feature-target pair."""
+    """A train and test split of a dataset, each part a feature-target pair."""
 
     train: tuple[Array, Array]
-    cal: tuple[Array, Array]
     test: tuple[Array, Array]
 
 
 def partition(
-    dataset: Dataset, seed: int, ratio: tuple[float, float, float] = (0.6, 0.2, 0.2)
+    dataset: Dataset, seed: int, ratio: tuple[float, float] = (0.8, 0.2)
 ) -> Split:
-    """Partition a dataset into a train, cal, and test split deterministically from a seed."""
+    """Partition a dataset into a train and test split deterministically from a seed."""
     if any(r <= 0.0 for r in ratio) or abs(sum(ratio) - 1.0) > 1e-9:
         raise ValueError(f"ratio must be positive and sum to 1, got {ratio}")
     n = dataset.y.shape[0]
     idx = np.random.default_rng(seed).permutation(n)
     n_train = int(n * ratio[0])
-    n_cal = int(n * ratio[1])
-    tr, ca, te = np.split(idx, [n_train, n_train + n_cal])
+    tr, te = np.split(idx, [n_train])
     return Split(
         train=(dataset.X[tr], dataset.y[tr]),
-        cal=(dataset.X[ca], dataset.y[ca]),
         test=(dataset.X[te], dataset.y[te]),
     )

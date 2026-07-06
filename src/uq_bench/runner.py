@@ -1,7 +1,7 @@
 """
 Benchmark runner.
 
-Runs a method on a dataset by handing it a split over an npz file and scoring the intervals it returns, with the method in its own `uv` environment so the bench shares no dependencies. `run_grid` sweeps that across the method, dataset, seed, and coverage axes.
+Runs a method on a dataset by handing it a train and test split over an npz file, along with the seed so the method's own calibration split is reproducible, and scoring the intervals it returns; the method runs in its own `uv` environment so the bench shares no dependencies. `run_grid` sweeps that across the method, dataset, seed, and coverage axes.
 """
 
 import shutil
@@ -32,11 +32,17 @@ def run(dataset: Dataset, method: Path, seed: int, coverage: float) -> dict[str,
             split_path,
             X_train=split.train[0],
             y_train=split.train[1],
-            X_cal=split.cal[0],
-            y_cal=split.cal[1],
             X_test=split.test[0],
         )
-        cmd = [uv, "run", str(method), str(split_path), str(preds_path), str(coverage)]
+        cmd = [
+            uv,
+            "run",
+            str(method),
+            str(split_path),
+            str(preds_path),
+            str(coverage),
+            str(seed),
+        ]
         subprocess.run(cmd, check=True)  # noqa: S603
         preds = np.load(preds_path)
         return metrics.evaluate(
