@@ -1,7 +1,7 @@
 """
 Benchmark runner.
 
-Runs a method on a dataset by handing it a train and test split over an npz file, along with the seed so the method's own calibration split is reproducible, and scoring the intervals it returns; the method runs as its own `uv` project so the bench shares no dependencies. `run_grid` sweeps that across the method, dataset, seed, and coverage axes.
+Runs a method on a dataset by handing it a train and test split over an npz file, along with the seed so the method's own calibration split is reproducible, and scoring the intervals it returns; the method runs as its own `uv` project so the bench shares no dependencies. A method writes `lower` and `upper` arrays and may add a `center` array with its point predictions, which then anchors the NCIW rescaling instead of the interval midpoint. `run_grid` sweeps that across the method, dataset, seed, and coverage axes.
 """
 
 import os
@@ -50,8 +50,13 @@ def run(dataset: Dataset, method: Path, seed: int, coverage: float) -> dict[str,
         env.pop("VIRTUAL_ENV", None)  # let uv use the method's own project env
         subprocess.run(cmd, check=True, env=env)  # noqa: S603
         preds = np.load(preds_path)
+        center = preds["center"] if "center" in preds.files else None
         return metrics.evaluate(
-            split.test[1], preds["lower"], preds["upper"], alpha=1.0 - coverage
+            split.test[1],
+            preds["lower"],
+            preds["upper"],
+            alpha=1.0 - coverage,
+            center=center,
         )
 
 
