@@ -1,13 +1,16 @@
 """
 Benchmark runner.
 
-Runs a method on a dataset by handing it a train and test split over an npz file, along with the seed so the method's own calibration split is reproducible, and scoring the intervals it returns; the method runs as its own `uv` project so the bench shares no dependencies. A method writes `lower` and `upper` arrays and may add a `center` array with its point predictions, which then anchors the NCIW rescaling instead of the interval midpoint. `run_grid` sweeps that across the method, dataset, seed, and coverage axes.
+Runs a method on a dataset by handing it a train and test split over an npz file, along with the seed so the method's own calibration split is reproducible, and scoring the intervals it returns; the method runs as its own `uv` project so the bench shares no dependencies. A method writes `lower` and `upper` arrays and may add a `center` array with its point predictions, which then anchors the NCIW rescaling instead of the interval midpoint. `run_grid` sweeps that across the method, dataset, seed, and coverage axes over a few worker threads, appending each cell to a results CSV as it finishes and skipping cells already present, so an interrupted sweep resumes where it left off. See methods/README.md for the full method contract.
 """
 
+import csv
 import os
 import shutil
 import subprocess
 import tempfile
+import threading
+from concurrent.futures import ThreadPoolExecutor
 from itertools import product
 from pathlib import Path
 
@@ -60,15 +63,55 @@ def run(dataset: Dataset, method: Path, seed: int, coverage: float) -> dict[str,
         )
 
 
+def _read_results(path: Path) -> list[Result]:
+    if not path.exists():
+        return []
+    keys = ("method", "dataset", "seed", "coverage")
+    with path.open(newline="") as f:
+        return [
+            Result(
+                row["method"],
+                row["dataset"],
+                int(row["seed"]),
+                float(row["coverage"]),
+                {m: float(v) for m, v in row.items() if m not in keys},
+            )
+            for row in csv.DictReader(f)
+        ]
+
+
 def run_grid(
     methods: list[Path],
     datasets: list[Dataset],
     seeds: list[int],
     coverages: list[float],
+    results_path: Path = Path("results.csv"),
+    workers: int = 4,
 ) -> list[Result]:
     """Run every method on every dataset across the seeds and coverages."""
-    results: list[Result] = []
-    for method, dataset, seed, coverage in product(methods, datasets, seeds, coverages):
-        scores = run(dataset, method, seed, coverage)
-        results.append(Result(method.name, dataset.name, seed, coverage, scores))
-    return results
+    results = _read_results(results_path)
+    done = {(r.method, r.dataset, r.seed, r.coverage) for r in results}
+    cells = [
+        cell
+        for cell in product(methods, datasets, seeds, coverages)
+        if (cell[0].name, cell[1].name, cell[2], cell[3]) not in done
+    ]
+    lock = threading.Lock()
+    with results_path.open("a", newline="") as f:
+        writer = csv.writer(f)
+
+        def one(cell: tuple[Path, Dataset, int, float]) -> Result:
+            method, dataset, seed, coverage = cell
+            scores = run(dataset, method, seed, coverage)
+            with lock:
+                if f.tell() == 0:
+                    writer.writerow(["method", "dataset", "seed", "coverage", *scores])
+                writer.writerow(
+                    [method.name, dataset.name, seed, coverage, *scores.values()]
+                )
+                f.flush()
+            return Result(method.name, dataset.name, seed, coverage, scores)
+
+        with ThreadPoolExecutor(max_workers=workers) as pool:
+            results += pool.map(one, cells)
+    return sorted(results, key=lambda r: (r.method, r.dataset, r.seed, r.coverage))
