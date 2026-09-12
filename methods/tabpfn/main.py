@@ -7,6 +7,8 @@ Fits the pretrained TabPFN foundation model and reads the interval directly off 
 import os
 import sys
 
+os.environ.setdefault("TABPFN_ALLOW_CPU_LARGE_DATASET", "1")  # snapshot at import
+
 import numpy as np
 from tabpfn import TabPFNRegressor
 
