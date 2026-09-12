@@ -1,0 +1,15 @@
+[project]
+name = "method-uacqr"
+version = "0.1.0"
+requires-python = ">=3.12"
+dependencies = [
+    "catboost>=1.2",
+    "lightgbm>=4.0",
+    "matplotlib>=3.8",
+    "numpy>=2.0",
+    "pandas>=2.0",
+    "scikit-learn>=1.5,<1.7",  # sklearn-quantile 0.1.1 breaks on 1.7 private API change
+    "scipy>=1.11",
+    "sklearn-quantile>=0.1.1",
+    "torch>=2.6",
+]
