@@ -3,13 +3,10 @@ name = "method-pcs"
 version = "0.1.0"
 requires-python = ">=3.11"
 dependencies = [
+    "celer>=0.7",
     "numpy>=1.26",
     "pandas>=2.0",
-    "pcs-uq",
-    "scikit-learn>=1.4",
+    "scikit-learn>=1.4,<1.7",  # celer 0.7 breaks on 1.7's removed n_alphas
     "tqdm>=4.66",
     "xgboost>=2.0",
 ]
-
-[tool.uv.sources]
-pcs-uq = { path = "../../../literature/pcs-uq/code", editable = true }
