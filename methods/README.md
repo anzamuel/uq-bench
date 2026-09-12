@@ -11,15 +11,19 @@ Each directory here is one benchmark method: a standalone `uv` project with its 
 The method writes `preds` as an `npz` with one row per test point: `lower` and `upper` interval bounds, and optionally `center` with its point predictions. When `center` is present the harness anchors the NCIW rescaling on it instead of the interval midpoint.
 
 ## Determinism
-Same seed, same bytes: two runs with identical arguments must write identical arrays, and a different seed must change them. `tests/test_determinism.py` discovers every method here and enforces this, so never draw from unseeded global state and avoid parallel reductions at predict time, their summation order is nondeterministic.
+Same seed, same machine, same environment, same bytes: two runs with identical arguments must write identical arrays, and a different seed must change them. Bit-identity across machines is out of scope, different BLAS backends sum floats differently. `tests/test_determinism.py` discovers every method here and enforces the per-machine contract, so never draw from unseeded global state and avoid parallel reductions whose summation order depends on scheduling.
+
+## Scheduling
+The grid runs one method at a time, one `run_grid` call per method, so each phase has a homogeneous resource shape. The guiding rule is threads times workers equals cores: methods whose cells are single threaded run at `workers` equal to the CPU count, the machine-derived default, while methods with internal pools run at fewer workers sized so the products match. Worker counts and pool sizes are pure scheduling and never affect results; thread counts inside numeric kernels can affect bytes and are therefore fixed constants inside each method. Each method states its shape under `threading` in its README. The root `benchmark.py` encodes the paper grid's phases with these worker sizes. Methods may share state across directories only through content-addressed caches, like the ctabpfn trio's inference cache; order such phases so the first fills what the rest reuse.
 
 ## Environment
 `UQ_BENCH_FAST` is the one universal knob: set to any non-empty value it requests the method's own cheap settings, used by the test suite. Each method defines what it maps to, or ignores it, in its README; method-specific knobs always take precedence over it.
 
 ## Per-method README
-Every method's `README.md` follows this fixed format so methods stay comparable at a glance. A `# <name>` title matching the directory name, a description of at most three sentences covering what the method does, how it forms its intervals, and what it wraps, then exactly five label lines in this order:
+Every method's `README.md` follows this fixed format so methods stay comparable at a glance. A `# <name>` title matching the directory name, a description of at most three sentences covering what the method does, how it forms its intervals, and what it wraps, then exactly six label lines in this order:
 - `paper:` link to the implemented paper, or `none`.
 - `source:` dependency provenance, a pinned package, an editable checkout path, or `original`.
 - `fast:` what `UQ_BENCH_FAST` changes, or `ignored`.
 - `knobs:` method-specific env vars with effect and default, semicolon separated, or `none`.
+- `threading:` the cell's internal thread and process usage plus the recommended phase workers.
 - `deviations:` deliberate differences from the reference implementation, semicolon separated, or `none`.
