@@ -1,0 +1,14 @@
+[project]
+name = "method-clear"
+version = "0.1.0"
+requires-python = ">=3.12,<3.13"
+dependencies = [
+    "celer>=0.7",
+    "clear-uq",
+    "numpy",
+    "scikit-learn",
+    "xgboost",
+]
+
+[tool.uv.sources]
+clear-uq = { git = "https://github.com/Unco3892/clear.git", rev = "9b3c0ea3de76358906dfc4448646b4a9c432f632" }
