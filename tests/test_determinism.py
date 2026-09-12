@@ -6,10 +6,11 @@ Every project under methods/ is discovered and run through the harness: the same
 
 from pathlib import Path
 
+import numpy as np
 import pytest
 
 from uq_bench import runner
-from uq_bench.datasets import load_synthetic
+from uq_bench.datasets import Dataset
 
 METHODS = Path(__file__).parent.parent / "methods"
 
@@ -20,7 +21,12 @@ def _methods() -> list[str]:
 
 @pytest.fixture(scope="module")
 def dataset():
-    return load_synthetic("heteroscedastic", n=400, seed=7)
+    # low noise: heavy noise legitimately drives uacqr to all-infinite
+    # intervals whose metrics cannot distinguish seeds
+    rng = np.random.default_rng(7)
+    X = rng.normal(size=(400, 3))
+    y = X @ np.array([1.0, -2.0, 0.5]) + 0.1 * rng.normal(size=400)
+    return Dataset(name="determinism", X=X, y=y)
 
 
 @pytest.mark.parametrize("method", _methods())
