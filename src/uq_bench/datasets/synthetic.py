@@ -1,7 +1,7 @@
 """
 Synthetic regression datasets.
 
-Generators build a Dataset from a known data-generating process, so a method's intervals can be checked against controllable noise. Use list_synthetic to list them and load_synthetic to build one. The heteroscedastic family grows its noise with the input magnitude, so intervals should widen away from the origin.
+Generators build a Dataset from a known data-generating process, so a method's intervals can be checked against controllable noise. Use list_synthetic to list them and load_synthetic to build one.
 """
 
 import numpy as np
