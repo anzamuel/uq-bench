@@ -1,7 +1,7 @@
 """
 Benchmark runner.
 
-Runs a method on a dataset by handing it a train and test split over an npz file, along with the seed so the method's own calibration split is reproducible, and scoring the intervals it returns; the method runs as its own `uv` project so the bench shares no dependencies. A method writes `lower` and `upper` arrays and may add a `center` array with its point predictions, which then anchors the NCIW rescaling instead of the interval midpoint. `run_grid` sweeps that across the method, dataset, seed, and coverage axes over a few worker threads, appending each cell to a results CSV as it finishes and skipping cells already present, so an interrupted sweep resumes where it left off. See methods/README.md for the full method contract.
+Runs a method on a dataset by handing it a train and test split over an npz file, along with the seed so the method's own calibration split is reproducible, and scoring the intervals it returns; the method runs as its own `uv` project so the bench shares no dependencies. A method writes `lower` and `upper` arrays and may add a `center` array with its point predictions, which then anchors the NCIW rescaling instead of the interval midpoint. `run_grid` sweeps that across the method, dataset, seed, and coverage axes over worker threads, one per CPU by default, appending each cell to a results CSV as it finishes and skipping cells already present, so an interrupted sweep resumes where it left off; cells run largest dataset first so the end-of-phase straggler is a small one, and the call is meant to be made once per method with phase-appropriate workers when methods differ in resource shape. See methods/README.md for the full method contract.
 """
 
 import csv
@@ -86,9 +86,11 @@ def run_grid(
     seeds: list[int],
     coverages: list[float],
     results_path: Path = Path("results.csv"),
-    workers: int = 4,
+    workers: int | None = None,
 ) -> list[Result]:
     """Run every method on every dataset across the seeds and coverages."""
+    if workers is None:
+        workers = os.process_cpu_count() or 4  # scheduling only, never affects results
     results = _read_results(results_path)
     done = {(r.method, r.dataset, r.seed, r.coverage) for r in results}
     cells = [
@@ -96,6 +98,9 @@ def run_grid(
         for cell in product(methods, datasets, seeds, coverages)
         if (cell[0].name, cell[1].name, cell[2], cell[3]) not in done
     ]
+    cells.sort(
+        key=lambda cell: cell[1].X.size, reverse=True
+    )  # largest work first, shortest straggler tail
     lock = threading.Lock()
     with results_path.open("a", newline="") as f:
         writer = csv.writer(f)
