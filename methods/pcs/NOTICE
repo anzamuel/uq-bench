@@ -1,0 +1,1 @@
+pcs_uq.py and pcs_oob.py are third-party code vendored from https://github.com/aagarwal1996/PCS_UQ at commit b004ebc. The upstream repository ships no license file and declares MIT only in its setup.py classifiers. These two files are not covered by the Apache 2.0 license of uq-bench and remain under their authors' terms.

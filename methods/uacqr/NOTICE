@@ -1,0 +1,1 @@
+uacqr.py and helper.py are third-party code vendored from https://github.com/rrross/UACQR at commit 884718a. LICENSE in this folder is the upstream license and covers those two files, not the Apache 2.0 license of uq-bench.

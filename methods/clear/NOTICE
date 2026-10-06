@@ -1,0 +1,1 @@
+pcs_uq.py is third-party code vendored from https://github.com/Unco3892/clear at commit 9b3c0ea, which carries it from https://github.com/aagarwal1996/PCS_UQ. LICENSE in this folder is the upstream clear license and covers that file, not the Apache 2.0 license of uq-bench.
