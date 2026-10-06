@@ -1,8 +1,8 @@
 [project]
-name = "method-tabpfn"
+name = "method-tabpfn-v3.5"
 version = "0.1.0"
 requires-python = ">=3.12"
 dependencies = [
     "numpy>=1.26",
-    "tabpfn>=8.5.0",
+    "tabpfn==9.0.0",
 ]

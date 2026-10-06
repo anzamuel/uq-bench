@@ -1,0 +1,11 @@
+[project]
+name = "method-ctabpfn-m-v3"
+version = "0.1.0"
+requires-python = ">=3.13"
+dependencies = [
+    "ctabpfn",
+    "numpy>=1.26",
+]
+
+[tool.uv.sources]
+ctabpfn = { git = "https://github.com/anzamuel/ctabpfn", rev = "48dbc2723836181a01e71f06a23301608f57060d" }

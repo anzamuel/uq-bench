@@ -1,7 +1,7 @@
 """
 Benchmark driver.
 
-Runs the paper grid one method phase at a time through `run_grid`, resuming from `results.csv`, with per-phase workers sized to each method's resource shape per the `threading` line of its README, threads times workers close to cores. Phases go cheapest first so an interrupted run keeps its quick wins, and ctabpfn-a runs before its siblings so they ride the shared inference cache; within a phase the runner already orders cells largest first. Datasets are the six paper picks, seeds the ten replication seeds, coverage 0.9 only.
+Runs the paper grid one method phase at a time through `run_grid`, resuming from `results.csv`, with per-phase workers sized to each method's resource shape per the `threading` line of its README, threads times workers close to cores. Phases go cheapest first so an interrupted run keeps its quick wins, and ctabpfn-a-v3 runs before its siblings so they ride the shared inference cache; within a phase the runner already orders cells largest first. Datasets are the six paper picks, seeds the ten replication seeds, coverage 0.9 only.
 """
 
 import os
@@ -32,10 +32,20 @@ CLEAR_JOBS = int(os.environ.get("CLEAR_JOBS", "4"))
 TORCH_WORKERS = min(4, max(2, CORES // 4))
 PHASES = (
     ("baseline", CORES),
-    ("tabpfn", TORCH_WORKERS),
-    ("ctabpfn-a", TORCH_WORKERS),  # fills the shared inference cache for m and q
-    ("ctabpfn-m", TORCH_WORKERS),
-    ("ctabpfn-q", TORCH_WORKERS),
+    ("tabpfn-v3", TORCH_WORKERS),
+    (
+        "ctabpfn-a-v3",
+        TORCH_WORKERS,
+    ),  # fills the shared inference cache for m-v3 and q-v3
+    ("ctabpfn-m-v3", TORCH_WORKERS),
+    ("ctabpfn-q-v3", TORCH_WORKERS),
+    ("tabpfn-v3.5", TORCH_WORKERS),
+    (
+        "ctabpfn-a-v3.5",
+        TORCH_WORKERS,
+    ),  # fills the shared inference cache for m-v3.5 and q-v3.5
+    ("ctabpfn-m-v3.5", TORCH_WORKERS),
+    ("ctabpfn-q-v3.5", TORCH_WORKERS),
     ("uacqr", max(1, CORES // 2)),
     ("clear", max(1, CORES // CLEAR_JOBS)),
     ("pcs", CORES),

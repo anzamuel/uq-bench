@@ -27,3 +27,6 @@ Every method's `README.md` follows this fixed format so methods stay comparable 
 - `knobs:` method-specific env vars with effect and default, semicolon separated, or `none`.
 - `threading:` the cell's internal thread and process usage plus the recommended phase workers.
 - `deviations:` deliberate differences from the reference implementation, semicolon separated, or `none`.
+
+## Versioning
+A method that wraps a versioned model carries the model generation in its directory name, `tabpfn-v3`, `ctabpfn-q-v3.5`, and pins that generation inside its own environment, for the ctabpfn family through one pinned git commit of the `ctabpfn` package, which in turn pins one tabpfn release and one set of weights. A new model generation is a new directory with new pins, existing directories never move, so every row in `results.csv` stays reproducible under the method name it was produced with.
