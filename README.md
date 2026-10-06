@@ -1,7 +1,7 @@
 # uq-bench
 Work in progress. Interfaces, method set, and results may still change.
 
-A reproducible benchmark for uncertainty quantification on tabular regression. Every method runs under one protocol and gets scored by the same metrics, so differences come from the method and not from the setup. We built it to evaluate [CTabPFN](https://github.com/anzamuel/ctabpfn), conformal intervals on TabPFN's native quantiles, against CLEAR, PCS-UQ, UACQR, native TabPFN, and a split-conformal baseline.
+A reproducible benchmark for uncertainty quantification on tabular regression. Every method runs under one protocol and gets scored by the same metrics, so differences come from the method and not from the setup. We built it to evaluate [CTabPFN](https://github.com/anzamuel/ctabpfn) [11], conformal intervals on TabPFN's native quantiles, against CLEAR, PCS-UQ, UACQR, native TabPFN, and a split-conformal baseline.
 
 ## Design
 - Every method sees the same train-test splits and seeds. The current grid is 12 real datasets, 10 seeds, 80/20 splits, and target coverage 0.9.
@@ -20,7 +20,7 @@ uv run python benchmark.py # every phase of the grid, appends to results.csv
 Datasets download from https://huggingface.co/datasets/anzamuel/uq-bench on first use. The TabPFN methods need a `TABPFN_TOKEN` from a Prior Labs account.
 
 ## References
-Method folders: `baseline` [1, 2], `uacqr` [5], `pcs` [6], `clear` [7], `tabpfn-v3` [8, 9], `tabpfn-v3.5` [8], `ctabpfn-a-*` [3, 10], `ctabpfn-m-*` [1, 2], `ctabpfn-q-*` [4]. TabPFN-3.5 has no published reference yet.
+Method folders: `baseline` [1, 2], `uacqr` [5], `pcs` [6], `clear` [7], `tabpfn-v3` [8, 9], `tabpfn-v3.5` [8], `ctabpfn-a-*` [3, 10, 11], `ctabpfn-m-*` [1, 2, 11], `ctabpfn-q-*` [4, 11]. TabPFN-3.5 has no published reference yet.
 
 1. V. Vovk, A. Gammerman, G. Shafer. Algorithmic Learning in a Random World. Springer, 2005.
 2. J. Lei, M. G'Sell, A. Rinaldo, R. J. Tibshirani, L. Wasserman. Distribution-Free Predictive Inference for Regression. Journal of the American Statistical Association, 113(523):1094-1111, 2018.
@@ -32,6 +32,7 @@ Method folders: `baseline` [1, 2], `uacqr` [5], `pcs` [6], `clear` [7], `tabpfn-
 8. N. Hollmann, S. Müller, L. Purucker, A. Krishnakumar, M. Körfer, S. B. Hoo, R. T. Schirrmeister, F. Hutter. Accurate Predictions on Small Data with a Tabular Foundation Model. Nature, 637:319-326, 2025. [doi:10.1038/s41586-024-08328-7](https://doi.org/10.1038/s41586-024-08328-7)
 9. L. Grinsztajn, K. Flöge, O. Key, F. Birkel, P. Jund, B. Roof, et al. TabPFN-3: Technical Report. arXiv preprint, 2026. [arXiv:2605.13986](https://arxiv.org/abs/2605.13986)
 10. F. D. van Leeuwen. Conformal Prediction for Tabular Prior-Data Fitted Networks with Missing Data. OpenReview preprint, 2025. [openreview:TnZcC7GXI5](https://openreview.net/forum?id=TnZcC7GXI5)
+11. S. Anzalone, J. Heiss. CTabPFN: Conformal Uncertainty Quantification with TabPFN. Semester project, ETH Zurich, 2026. [paper](https://github.com/anzamuel/ctabpfn/blob/main/paper/ctabpfn.pdf)
 
 ## Authors
 Samuel Anzalone and Jakob Heiss.
