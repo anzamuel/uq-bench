@@ -1,7 +1,26 @@
-Python project template using uv, ruff and ty with pre-commit hooks.
+# uq-bench
+Work in progress. Interfaces, method set, and results may still change.
 
-Run the `setup.sh` script from the root of the repository to configure the local development environment:
+A reproducible benchmark for uncertainty quantification on tabular regression. Every method runs under one protocol and gets scored by the same metrics, so differences come from the method and not from the setup. We built it to evaluate [CTabPFN](https://github.com/anzamuel/ctabpfn), conformal intervals on TabPFN's native quantiles, against CLEAR, PCS-UQ, UACQR, native TabPFN, and a split-conformal baseline.
 
+## Design
+- Every method sees the same train-test splits and seeds. The current grid is 12 real datasets, 10 seeds, 80/20 splits, and target coverage 0.9.
+- A method is a small adapter in `methods/<name>/`, a standalone uv project with its own pinned environment. `methods/README.md` defines the contract.
+- A method takes a split and a seed and returns interval bounds. Same seed and machine give identical bytes, and `tests/` checks this.
+- Results land in one tidy `results.csv`, one row per method, dataset, seed, and coverage.
+- Metrics cover coverage (PICP), width (MPIW, NIW, NCIW), and interval quality (interval score AISL, pinball loss).
+- Versioned models carry the generation in the folder name, for example `ctabpfn-q-v3.5`, so old rows stay reproducible.
+- One command reruns the full grid and resumes from `results.csv`.
+
+## Run
 ```bash
-./setup.sh
+./setup.sh                 # uv sync and pre-commit hooks
+uv run python benchmark.py # every phase of the grid, appends to results.csv
 ```
+Datasets download from https://huggingface.co/datasets/anzamuel/uq-bench on first use. The TabPFN methods need a `TABPFN_TOKEN` from a Prior Labs account.
+
+## Authors
+Samuel Anzalone and Jakob Heiss.
+
+## License
+Apache 2.0, see [LICENSE](LICENSE). Vendored code in `methods/clear`, `methods/pcs`, and `methods/uacqr` keeps its upstream license, see the LICENSE or NOTICE file in each folder.
